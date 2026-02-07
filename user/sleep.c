@@ -7,6 +7,6 @@ int main(int argc, char*argv[]){
         exit(1);
     }
     int sleeptime=atoi(argv[1]);
-    int ret=sleep(sleeptime);
+    int ret=pause(sleeptime);
     exit(ret);
 }
