@@ -107,3 +107,14 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+//add a sys_trace function
+uint64
+sys_trace(void)
+{
+int mask;
+argint(0,&mask);//读取a0寄存器的值,也就是要跟踪的系统调用号
+struct proc *p = myproc();
+p->trace_mask=mask;
+return 0;
+}
