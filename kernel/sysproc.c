@@ -6,6 +6,10 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "vm.h"
+#include "sysinfo.h"
+
+uint64 acquire_freemem();
+uint64 acquire_nproc();
 
 uint64
 sys_exit(void)
@@ -117,4 +121,22 @@ argint(0,&mask);//读取a0寄存器的值,也就是要跟踪的系统调用号
 struct proc *p = myproc();
 p->trace_mask=mask;
 return 0;
+}
+
+uint64
+sys_sysinfo(void)
+{
+  uint64 addr;
+  struct sysinfo info;
+  struct proc *p=myproc();
+
+  info.nproc=acquire_nproc();
+  info.freemem=acquire_freemem();
+
+  argaddr(0, &addr);//把a0存的info地址传给addr
+  
+  if(copyout(p->pagetable, addr, (char *)&info, sizeof(info)) < 0)//把内核态的info内容传给addr指向的内存
+    return -1;
+
+  return 0;
 }
