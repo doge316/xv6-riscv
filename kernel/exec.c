@@ -9,6 +9,30 @@
 
 static int loadseg(pde_t *, uint64, struct inode *, uint, uint);
 
+void vmprint(pagetable_t pagetable,uint64 depth){
+  if(depth==2)printf("page table %p\n",pagetable);
+  if(depth<0)return;
+  for(int i = 0; i < 512; i++){
+    pte_t pte = pagetable[i];
+    if(pte & PTE_V){//代表这不是物理地址
+      uint64 child = PTE2PA(pte);//child是下一级页表的初始地址
+      if(depth==2){
+        printf(" ..%d: pte %p pa %p\n",i,(void*)pte,(void*)PTE2PA(pte));
+      }
+      if(depth==1){
+        printf(" .. ..%d: pte %p pa %p\n",i,(void*)pte,(void*)PTE2PA(pte));
+      }
+      if(depth==0){
+        printf(" .. .. ..%d: pte %p pa %p\n",i,(void*)pte,(void*)PTE2PA(pte));
+      }
+      //vmprint((pagetable_t)child, depth-1);
+      if((pte & (PTE_R|PTE_W|PTE_X)) == 0) {
+        vmprint((pagetable_t)child, depth - 1);
+      }
+    } 
+  }
+}
+
 // map ELF permissions to PTE permission bits.
 int flags2perm(int flags)
 {
@@ -134,6 +158,8 @@ kexec(char *path, char **argv)
   p->trapframe->epc = elf.entry;  // initial program counter = ulib.c:start()
   p->trapframe->sp = sp; // initial stack pointer
   proc_freepagetable(oldpagetable, oldsz);
+
+  if(p->pid==1)vmprint(p->pagetable,2);//打印当前页表信息
 
   return argc; // this ends up in a0, the first argument to main(argc, argv)
 
