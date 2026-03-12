@@ -147,7 +147,8 @@ UPROGS=\
 	$U/_dorphan\
 	$U/_trace\
 	$U/_sysinfotest\
-	$U/_vm1_test
+	$U/_vm1_test\
+	$U/_vm3_test
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

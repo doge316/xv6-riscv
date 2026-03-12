@@ -140,3 +140,27 @@ sys_sysinfo(void)
 
   return 0;
 }
+
+int 
+sys_pgaccess(void)
+{
+  uint64 addr;
+  int len;
+  int bitmask;
+  argaddr(0,&addr);//需要检查的地址
+  argint(1,&len);//页数
+  argint(2,&bitmask);//用户传入结果掩码地址
+  if(len>32||len<0) return -1;
+  
+  int res=0;
+  struct proc *p=myproc();
+  for(int i=0;i<len;i++){
+    int va=addr+i*PGSIZE;
+    int abit=vm_pgaccess(p->pagetable,va);
+    res=res|abit<<i;
+  }
+  if(copyout(p->pagetable,bitmask,(char*)&res, sizeof(res))<0)
+    return -1;
+  
+  return 0;
+}
