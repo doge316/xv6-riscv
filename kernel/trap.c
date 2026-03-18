@@ -39,14 +39,14 @@ usertrap(void)
 {
   int which_dev = 0;
 
-  if((r_sstatus() & SSTATUS_SPP) != 0)
+  if((r_sstatus() & SSTATUS_SPP) != 0)//spp表示陷入内核之前是user态还是supervisor态
     panic("usertrap: not from user mode");
 
   // send interrupts and exceptions to kerneltrap(),
   // since we're now in the kernel.
   w_stvec((uint64)kernelvec);  //DOC: kernelvec
 
-  struct proc *p = myproc();
+  struct proc *p = myproc();//只能是进程或内核线程，这里是进程
   
   // save user program counter.
   p->trapframe->epc = r_sepc();
@@ -56,6 +56,7 @@ usertrap(void)
 
     if(killed(p))
       kexit(-1);
+    //如果进程被标记为killed，就在中断时将它杀死并且不再返回用户态。
 
     // sepc points to the ecall instruction,
     // but we want to return to the next instruction.
@@ -63,14 +64,15 @@ usertrap(void)
 
     // an interrupt will change sepc, scause, and sstatus,
     // so enable only now that we're done with those registers.
-    intr_on();
+    intr_on();//处理完以上寄存器之后再打开中断开关
 
     syscall();
   } else if((which_dev = devintr()) != 0){
     // ok
   } else if((r_scause() == 15 || r_scause() == 13) &&
-            vmfault(p->pagetable, r_stval(), (r_scause() == 13)? 1 : 0) != 0) {
+            vmfault(p->pagetable, r_stval(), (r_scause() == 13)? 1 : 0) != 0) {//13读内存缺页，15写
     // page fault on lazily-allocated page
+    //vmfault函数是惰性分配，当发生缺页时才分配物理页
   } else {
     printf("usertrap(): unexpected scause 0x%lx pid=%d\n", r_scause(), p->pid);
     printf("            sepc=0x%lx stval=0x%lx\n", r_sepc(), r_stval());
@@ -87,7 +89,7 @@ usertrap(void)
   prepare_return();
 
   // the user page table to switch to, for trampoline.S
-  uint64 satp = MAKE_SATP(p->pagetable);
+  uint64 satp = MAKE_SATP(p->pagetable);//satp只存物理页号
 
   // return to trampoline.S; satp value in a0.
   return satp;
