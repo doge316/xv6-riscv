@@ -378,3 +378,14 @@ typedef uint64 *pagetable_t; // 512 PTEs
 // Sv39, to avoid having to sign-extend virtual addresses
 // that have the high bit set.
 #define MAXVA (1L << (9 + 9 + 9 + 12 - 1))
+
+#ifndef __ASSEMBLER__//编译器的内置宏
+//因为trampoline.S也会包含riscv.h，但是汇编文件看不懂c语法
+static inline uint64
+r_fp()
+{
+  uint64 x;
+  asm volatile("mv %0, fp" : "=r" (x));//使用汇编语言获取fp寄存器的值
+  return x;
+}
+#endif

@@ -92,6 +92,7 @@ sys_kill(void)
   int pid;
 
   argint(0, &pid);
+  backtrace();
   return kkill(pid);
 }
 

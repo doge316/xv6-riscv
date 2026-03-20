@@ -149,3 +149,22 @@ printfinit(void)
 {
   initlock(&pr.lock, "pr");
 }
+
+void backtrace(void){
+  printf("backtrace:\n");
+  uint64 fp=r_fp();//当前fp寄存器保存的是调用当前函数的函数的fp地址，因为当前函数fp还没存入栈就中断了
+  // 2. 获取内核栈的顶部与底部（合法范围）
+  //这是整个进程的页表，内核为每个进程分配PGSIZE的内核栈
+  uint64 stack_bottom = PGROUNDDOWN(fp);  // 栈底
+  uint64 stack_top = stack_bottom + PGSIZE; // 栈顶
+  
+  while(fp>=stack_bottom&&fp<=stack_top){
+    uint64 ra=*(uint64*)(fp-16);//fp-16强制转换成栈地址，然后解引用它，得到指针地址；
+    printf("%p\n",(uint64*)ra);
+
+    fp=*(uint64*)(fp-8);
+    if(fp<stack_bottom||fp>stack_top||fp==0)
+      break;
+  }
+}
+
