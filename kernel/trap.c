@@ -83,9 +83,16 @@ usertrap(void)
     kexit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  if(which_dev == 2){
+    p->ticks_cnt++;
+    if(p->ticks_cnt>p->ticks&&p->guardbit==0){
+      p->ticks_cnt=0;
+      p->guardbit=1;
+      p->retframe=p->trapframe;
+      p->trapframe->epc=p->handler;//中断结束去执行handler，规定在handler结束要调用sigreturn
+    }
     yield();
-
+  }
   prepare_return();
 
   // the user page table to switch to, for trampoline.S
