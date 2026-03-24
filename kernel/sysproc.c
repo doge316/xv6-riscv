@@ -43,23 +43,25 @@ sys_sbrk(void)
   int t;
   int n;
 
-  argint(0, &n);
-  argint(1, &t);
-  addr = myproc()->sz;
+  argint(0, &n);//要增加/减少页的个数
+  argint(1, &t);//模式：立即SBRK_EAGER还是懒分配
+  addr = myproc()->sz;//记录当前进程大小（堆的边界brk）
 
+  //立即分配或缩小内存
   if(t == SBRK_EAGER || n < 0) {
     if(growproc(n) < 0) {
       return -1;
     }
   } else {
+    //懒分配或扩大内存
     // Lazily allocate memory for this process: increase its memory
     // size but don't allocate memory. If the processes uses the
     // memory, vmfault() will allocate it.
-    if(addr + n < addr)
+    if(addr + n < addr)//溢出检查
       return -1;
     if(addr + n > TRAPFRAME)
       return -1;
-    myproc()->sz += n;
+    myproc()->sz += n;//只做懒分配
   }
   return addr;
 }

@@ -151,7 +151,8 @@ memcpy(void *dst, const void *src, uint n)
 
 char *
 sbrk(int n) {
-  return sys_sbrk(n, SBRK_EAGER);
+  //return sys_sbrk(n, SBRK_EAGER);//sbrk都是立即分配，不支持大内存分配了
+  return sys_sbrk(n,0);//只进行懒分配
 }
 
 char *
